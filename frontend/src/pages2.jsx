@@ -9,9 +9,9 @@ const pick = (rows, label = (r) => r.name) => (rows || []).map((r) => [r.id, lab
 function Table({ cols, rows, empty = "Nothing here yet." }) {
   if (!rows.length) return <Status>{empty}</Status>;
   return (
-    <table>
-      <thead><tr>{cols.map(([h]) => <th key={h}>{h}</th>)}</tr></thead>
-      <tbody>{rows.map((r, i) => <tr key={r.id ?? i}>{cols.map(([h, f]) => <td key={h}>{f(r)}</td>)}</tr>)}</tbody>
+    <table role="table">
+      <thead role="rowgroup"><tr role="row">{cols.map(([h]) => <th role="columnheader" key={h}>{h}</th>)}</tr></thead>
+      <tbody role="rowgroup">{rows.map((r, i) => <tr role="row" key={r.id ?? i}>{cols.map(([h, f]) => <td role="cell" key={h} data-label={h || undefined}>{f(r)}</td>)}</tr>)}</tbody>
     </table>
   );
 }
@@ -124,7 +124,7 @@ function OrderActions({ o, user, reload }) {
   if (!allowed || o.status === "completed") return null;
   const upd = (status, result) => patch(`/orders/${o.id}`, { status, result }).then(reload);
   return (
-    <span style={{ display: "flex", gap: 6 }}>
+    <span className="actions">
       {o.status === "ordered" && <button onClick={() => upd("in_progress")}>Start</button>}
       <input value={t} placeholder="Result" onChange={(e) => setT(e.target.value)} />
       <button onClick={() => t.trim() && upd("completed", t)}>Complete</button>
@@ -197,7 +197,7 @@ export function Pharmacy() {
       <h1>Pharmacy</h1>
       <h2>Dispense a prescription</h2>
       {msg && <p className={msg.ok ? "flash" : "flash error"}>{msg.t}</p>}
-      <form className="search" onSubmit={(e) => { e.preventDefault(); look(); }}>
+      <form className="search stack" onSubmit={(e) => { e.preventDefault(); look(); }}>
         <input value={code} onChange={(e) => setCode(e.target.value)} placeholder="Prescription code, e.g. HG-12-ab34cd56ef78" />
         <button>Look up</button>
         <button type="button" className="ghost" style={{ color: "var(--teal)", borderColor: "var(--teal)" }} onClick={() => setScan(!scan)}>{scan ? "Stop scanning" : "Scan QR"}</button>
@@ -231,7 +231,7 @@ export function Billing({ user }) {
   return (
     <>
       <h1>Billing</h1>
-      <div className="stats">{Object.entries(d.summary).map(([k, v]) => <div key={k}><b>{kes(v)}</b>{k}</div>)}</div>
+      <div className="stats wide">{Object.entries(d.summary).map(([k, v]) => <div key={k}><b>{kes(v)}</b>{k}</div>)}</div>
       <h2>Bills</h2>
       <Table rows={d.bills} empty="No bills yet." cols={[
         ["Date", (b) => fmt(b.created)], ...(staff ? [["Patient", (b) => b.patient]] : []), ["For", (b) => b.description],
@@ -268,7 +268,7 @@ export function Tele({ user }) {
         ["Call", (t) => t.status === "scheduled" && <a href={t.meeting_url} target="_blank" rel="noreferrer">Join video call</a>],
         ["Aftercare plan", (t) => t.notes],
         ["", (t) => clinician && t.status === "scheduled" && (
-          <span style={{ display: "flex", gap: 6 }}><button onClick={() => done(t)}>Complete</button>
+          <span className="actions"><button onClick={() => done(t)}>Complete</button>
             <button className="ghost" onClick={() => patch(`/tele/${t.id}`, { status: "cancelled" }).then(reload)}>Cancel</button></span>)]]} />}
       {user.role !== "patient" && <><h2>Schedule a video visit</h2>
         <Form submit="Schedule visit" onSubmit={async (f) => { await post("/tele", { ...f, patient_id: +f.patient_id, doctor_id: f.doctor_id ? +f.doctor_id : null }); reload(); }} fields={[

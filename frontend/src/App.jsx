@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { LayoutDashboard, Users as UsersIcon, CalendarDays, ClipboardList, FlaskConical, Pill, Boxes, Receipt, Video, UserCog, ShieldCheck, LogOut } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { LayoutDashboard, Users as UsersIcon, CalendarDays, ClipboardList, FlaskConical, Pill, Boxes, Receipt, Video, UserCog, ShieldCheck, LogOut, Menu, X } from "lucide-react";
 import { api, getToken, setToken } from "./api";
 import { Dashboard, Appointments, Prescriptions } from "./pages.jsx";
 import { Patients, PatientDetail, Records, Orders, Pharmacy, Billing, Tele, Users, Audit } from "./pages2.jsx";
@@ -53,8 +53,8 @@ function Login({ onLogin }) {
             <div><b>HospitalGuard</b><small>Staff and patient pass</small></div>
           </div>
           <div className="badge-body">
-            <label>Email <input type="email" name="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} /></label>
-            <label>Password <input type="password" name="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
+            <label>Email <input type="email" name="email" required autoFocus={!matchMedia("(pointer:coarse)").matches} autoComplete="username" autoCapitalize="none" value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+            <label>Password <input type="password" name="password" required autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} /></label>
             {err && <p className="error">{err}</p>}
             <button>Sign in</button>
             <div className="demo">
@@ -76,6 +76,21 @@ export default function App() {
   const [user, setUser] = useState(null);
   const [ready, setReady] = useState(!getToken());
   const [view, setView] = useState(null);
+  const [menu, setMenu] = useState(false);
+  const closeRef = useRef(null);
+
+  useEffect(() => {
+    document.body.style.overflow = menu ? "hidden" : "";
+    if (!menu) return;
+    closeRef.current?.focus();
+    const esc = (e) => e.key === "Escape" && setMenu(false);
+    const mq = matchMedia("(min-width:901px)");
+    const wide = (e) => e.matches && setMenu(false);
+    addEventListener("keydown", esc); mq.addEventListener("change", wide);
+    return () => { document.body.style.overflow = ""; removeEventListener("keydown", esc); mq.removeEventListener("change", wide); };
+  }, [menu]);
+
+  useEffect(() => { window.scrollTo(0, 0); }, [view]);
 
   useEffect(() => {
     if (getToken()) api("/me").then(setUser).catch(() => setToken(null)).finally(() => setReady(true));
@@ -87,11 +102,11 @@ export default function App() {
   const nav = NAV[user.role] || ["dashboard"];
   const cur = view || { name: nav[0] };
   const active = cur.name === "patient" ? "patients" : cur.name;
-  const go = (name, id) => setView({ name, id });
+  const go = (name, id) => { setView({ name, id }); setMenu(false); };
   const openPatient = (id) => go("patient", id);
-  const logout = () => { setToken(null); setUser(null); setView(null); };
+  const logout = () => { setToken(null); setUser(null); setView(null); setMenu(false); };
   const pages = {
-    dashboard: () => <Dashboard user={user} open={openPatient} />,
+    dashboard: () => <Dashboard user={user} open={openPatient} go={go} />,
     patients: () => <Patients open={openPatient} />,
     patient: () => <PatientDetail id={cur.id} user={user} />,
     appointments: () => <Appointments user={user} open={openPatient} />,
@@ -108,7 +123,14 @@ export default function App() {
 
   return (
     <div className="shell">
-      <aside className="side">
+      <header className="topbar">
+        <button className="icon" aria-label="Open menu" aria-expanded={menu} aria-controls="side" onClick={() => setMenu(true)}><Menu size={24} /></button>
+        <Crest size={26} />
+        <b>{LABELS[active]}</b>
+      </header>
+      <div className={"scrim" + (menu ? " open" : "")} onClick={() => setMenu(false)} aria-hidden="true" />
+      <aside id="side" className={"side" + (menu ? " open" : "")}>
+        <button ref={closeRef} className="icon close" aria-label="Close menu" onClick={() => setMenu(false)}><X size={22} /></button>
         <a className="brand" href="#" onClick={link(() => go(nav[0]))}><Crest /><span>HospitalGuard</span></a>
         <nav className="nav">
           {nav.map((k) => { const Icon = ICONS[k]; return (
