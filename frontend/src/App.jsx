@@ -30,8 +30,12 @@ const Crest = ({ size = 32 }) => (
 
 const initials = (n) => n.replace(/^(Dr\.|Nurse|Pharm\.)\s*/, "").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
+const DEMO = { email: "itskarisa@outlook.com", password: "ChangeMe123!" };
+
 function Login({ onLogin }) {
   const [err, setErr] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const submit = async (e) => {
     e.preventDefault();
     const f = Object.fromEntries(new FormData(e.target));
@@ -49,10 +53,16 @@ function Login({ onLogin }) {
             <div><b>HospitalGuard</b><small>Staff and patient pass</small></div>
           </div>
           <div className="badge-body">
-            <label>Email <input type="email" name="email" required autoFocus /></label>
-            <label>Password <input type="password" name="password" required /></label>
+            <label>Email <input type="email" name="email" required autoFocus value={email} onChange={(e) => setEmail(e.target.value)} /></label>
+            <label>Password <input type="password" name="password" required value={password} onChange={(e) => setPassword(e.target.value)} /></label>
             {err && <p className="error">{err}</p>}
             <button>Sign in</button>
+            <div className="demo">
+              <b>Want to look around?</b>
+              <span>Email: <code>{DEMO.email}</code></span>
+              <span>Password: <code>{DEMO.password}</code></span>
+              <button type="button" onClick={() => { setEmail(DEMO.email); setPassword(DEMO.password); }}>Use these details</button>
+            </div>
           </div>
           <div className="barcode" aria-hidden="true" />
         </form>
