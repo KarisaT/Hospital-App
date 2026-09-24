@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { api } from "./api";
-import { QrCode, ApptTable, RxTable, useLoad, Status, fmt, formData } from "./pages.jsx";
+import { QrCode, ApptTable, RxTable, useLoad, Status, Fold, fmt, formData } from "./pages.jsx";
 
 const kes = (n) => "KES " + new Intl.NumberFormat("en-KE").format(n);
 const pick = (rows, label = (r) => r.name) => (rows || []).map((r) => [r.id, label(r)]);
@@ -64,11 +64,10 @@ export function Patients({ open }) {
       {rows && <Table empty={`No patients match "${q}".`} rows={rows} cols={[
         ["Name", (p) => <button className="link" onClick={() => open(p.id)}>{p.name}</button>],
         ["Contact", (p) => <>{p.email}<br />{p.phone}</>], ["Blood", (p) => p.blood_type], ["Status", (p) => p.status]]} />}
-      <h2>Register a patient</h2>
-      <Form submit="Register patient" onSubmit={async (f) => { await post("/patients", f); reload(); }} fields={[
+      <Fold title="Register a patient"><Form submit="Register patient" onSubmit={async (f) => { await post("/patients", f); reload(); }} fields={[
         { name: "name", label: "Full name", required: true }, { name: "email", label: "Email", type: "email" },
         { name: "phone", label: "Phone" }, { name: "gender", label: "Gender", options: ["female", "male", "other"] },
-        { name: "blood_type", label: "Blood type", options: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] }]} />
+        { name: "blood_type", label: "Blood type", options: ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"] }]} /></Fold>
     </>
   );
 }
@@ -108,11 +107,10 @@ export function Records({ user }) {
       <h1>Medical records</h1>
       {err && <p className="error">{err}</p>}
       {rows && <Table rows={rows} empty="No records yet." cols={[["When", (r) => fmt(r.created)], ["Patient", (r) => r.patient], ["Type", (r) => r.kind], ["Summary", (r) => r.summary], ["By", (r) => r.author]]} />}
-      {canWrite && <><h2>Add a record</h2>
-        <Form submit="Save record" onSubmit={async (f) => { await post("/records", { ...f, patient_id: +f.patient_id }); reload(); }} fields={[
+      {canWrite && <><Fold title="Add a record"><Form submit="Save record" onSubmit={async (f) => { await post("/records", { ...f, patient_id: +f.patient_id }); reload(); }} fields={[
           { name: "patient_id", label: "Patient", options: pick(patients) },
           { name: "kind", label: "Type", options: ["consultation", "diagnosis", "procedure", "vitals", "note"] },
-          { name: "summary", label: "Summary", required: true }]} /></>}
+          { name: "summary", label: "Summary", required: true }]} /></Fold></>}
     </>
   );
 }
@@ -143,10 +141,9 @@ export function Orders({ user }) {
         ["Ordered", (o) => fmt(o.created)], ["Patient", (o) => o.patient], ["Type", (o) => o.kind], ["Test", (o) => o.test],
         ["Doctor", (o) => o.doctor], ["Status", (o) => <span className={`tag ${o.status}`}>{o.status}</span>], ["Result", (o) => o.result],
         ["", (o) => <OrderActions o={o} user={user} reload={reload} />]]} />}
-      {["doctor", "admin"].includes(user.role) && <><h2>Order a test</h2>
-        <Form submit="Place order" onSubmit={async (f) => { await post("/orders", { ...f, patient_id: +f.patient_id }); reload(); }} fields={[
+      {["doctor", "admin"].includes(user.role) && <><Fold title="Order a test"><Form submit="Place order" onSubmit={async (f) => { await post("/orders", { ...f, patient_id: +f.patient_id }); reload(); }} fields={[
           { name: "patient_id", label: "Patient", options: pick(patients) }, { name: "kind", label: "Type", options: ["lab", "radiology"] },
-          { name: "test", label: "Test", required: true, placeholder: "e.g. Full blood count, Chest X-ray" }]} /></>}
+          { name: "test", label: "Test", required: true, placeholder: "e.g. Full blood count, Chest X-ray" }]} /></Fold></>}
     </>
   );
 }
@@ -243,10 +240,9 @@ export function Billing({ user }) {
             { name: "bill_id", label: "Bill", options: open.map((b) => [b.id, `${b.patient} · ${b.description} · ${kes(b.balance)} due`]) },
             { name: "amount", label: "Amount (KES)", type: "number", min: 1, required: true },
             { name: "method", label: "Method", options: ["cash", "mpesa", "card", "insurance"] }]} />}
-        <h2>Create a bill</h2>
-        <Form submit="Create bill" onSubmit={async (f) => { await post("/bills", { ...f, patient_id: +f.patient_id, amount: +f.amount }); reload(); }} fields={[
+        <Fold title="Create a bill"><Form submit="Create bill" onSubmit={async (f) => { await post("/bills", { ...f, patient_id: +f.patient_id, amount: +f.amount }); reload(); }} fields={[
           { name: "patient_id", label: "Patient", options: pick(patients) }, { name: "description", label: "Description", required: true },
-          { name: "amount", label: "Amount (KES)", type: "number", min: 1, required: true }]} /></>}
+          { name: "amount", label: "Amount (KES)", type: "number", min: 1, required: true }]} /></Fold></>}
     </>
   );
 }
@@ -270,11 +266,10 @@ export function Tele({ user }) {
         ["", (t) => clinician && t.status === "scheduled" && (
           <span className="actions"><button onClick={() => done(t)}>Complete</button>
             <button className="ghost" onClick={() => patch(`/tele/${t.id}`, { status: "cancelled" }).then(reload)}>Cancel</button></span>)]]} />}
-      {user.role !== "patient" && <><h2>Schedule a video visit</h2>
-        <Form submit="Schedule visit" onSubmit={async (f) => { await post("/tele", { ...f, patient_id: +f.patient_id, doctor_id: f.doctor_id ? +f.doctor_id : null }); reload(); }} fields={[
+      {user.role !== "patient" && <><Fold title="Schedule a video visit"><Form submit="Schedule visit" onSubmit={async (f) => { await post("/tele", { ...f, patient_id: +f.patient_id, doctor_id: f.doctor_id ? +f.doctor_id : null }); reload(); }} fields={[
           { name: "patient_id", label: "Patient", options: pick(patients) },
           ...(user.role !== "doctor" ? [{ name: "doctor_id", label: "Doctor", options: pick(doctors, (d) => `${d.name} · ${d.department}`) }] : []),
-          { name: "when", label: "Date and time", type: "datetime-local", required: true }]} /></>}
+          { name: "when", label: "Date and time", type: "datetime-local", required: true }]} /></Fold></>}
     </>
   );
 }
@@ -290,11 +285,10 @@ export function Users({ me }) {
       {err && <p className="error">{err}</p>}
       {rows && <Table rows={rows} cols={[["Name", (u) => u.name], ["Email", (u) => u.email], ["Department", (u) => u.department],
         ["Role", (u) => u.id === me.id ? u.role : <select value={u.role} onChange={(e) => patch(`/users/${u.id}`, { role: e.target.value }).then(reload)}>{ROLES.map((r) => <option key={r}>{r}</option>)}</select>]]} />}
-      <h2>Add a user</h2>
-      <Form submit="Create user" onSubmit={async (f) => { await post("/users", f); reload(); }} fields={[
+      <Fold title="Add a user"><Form submit="Create user" onSubmit={async (f) => { await post("/users", f); reload(); }} fields={[
         { name: "name", label: "Full name", required: true }, { name: "email", label: "Email", type: "email", required: true },
         { name: "password", label: "Temporary password (8+ characters)", type: "password", required: true },
-        { name: "role", label: "Role", options: ROLES }, { name: "department", label: "Department (optional)" }]} />
+        { name: "role", label: "Role", options: ROLES }, { name: "department", label: "Department (optional)" }]} /></Fold>
     </>
   );
 }

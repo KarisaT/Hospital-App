@@ -271,3 +271,20 @@ button,a,input,select{touch-action:manipulation}
   .dot{left:43px}.tl li.now span{left:43px}
   .visit .acts{flex-wrap:wrap}.visit .acts button{flex:1 1 auto}
 }
+
+/* ---------- less scrolling ---------- */
+.fold{margin-top:1.6em}
+.fold>summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;min-height:52px;padding:0 18px;
+  background:var(--panel);border-radius:14px;box-shadow:var(--shadow);font:500 1.1rem var(--serif);color:var(--ink)}
+.fold>summary::-webkit-details-marker{display:none}
+.fold>summary::after{content:"+";font:400 1.6rem var(--sans);color:var(--teal)}
+.fold[open]>summary{margin-bottom:14px}.fold[open]>summary::after{content:"\2013"}
+.only-narrow{display:none}
+button.more{display:block;margin:12px auto 0;background:none;box-shadow:none;color:var(--teal);font-weight:600}
+button.more:hover{transform:none;box-shadow:none;text-decoration:underline}
+.visit .when{display:block;color:var(--muted);font-size:.8rem;font-weight:600;margin-bottom:2px}
+.visit.done p{display:none}
+@media(max-width:800px){
+  .only-wide{display:none}.only-narrow{display:grid;gap:10px}
+  .visit{padding:12px 14px 12px 18px}
+}

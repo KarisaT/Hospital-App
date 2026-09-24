@@ -13,6 +13,10 @@ export function useLoad(path) {
   return [data, load, err];
 }
 
+export function Fold({ title, children }) {
+  return <details className="fold"><summary>{title}</summary>{children}</details>;
+}
+
 export function Status({ children }) {
   if (children === "Loading…") return <div className="skeleton" aria-busy="true"><i /><i /><i /></div>;
   return <p className="empty">{children}</p>;
@@ -25,7 +29,8 @@ export function ApptTable({ appts, user, reload, showPatient = true, open }) {
   if (!appts.length) return <Status>No appointments here.</Status>;
   const set = (id, status) => api(`/appointments/${id}`, { method: "PATCH", body: { status } }).then(reload);
   return (
-    <table role="table">
+    <>
+    <table role="table" className="only-wide">
       <thead role="rowgroup"><tr role="row"><th role="columnheader">When</th>{showPatient && <th role="columnheader">Patient</th>}<th role="columnheader">Doctor</th><th role="columnheader">Reason</th><th role="columnheader">Status</th><th role="columnheader"></th></tr></thead>
       <tbody role="rowgroup">{appts.map((a) => (
         <tr role="row" key={a.id} className="dept-row" style={{ "--dept": DEPT[a.department] }}>
@@ -40,6 +45,8 @@ export function ApptTable({ appts, user, reload, showPatient = true, open }) {
         </tr>))}
       </tbody>
     </table>
+    <div className="only-narrow">{appts.map((a) => <Visit key={a.id} a={a} user={user} reload={reload} open={open} when showPatient={showPatient} />)}</div>
+    </>
   );
 }
 
@@ -90,11 +97,12 @@ const dayLabel = (iso) => {
   return diff === 0 ? "Today" : diff === 1 ? "Tomorrow" : d.toLocaleDateString([], { weekday: "long", day: "numeric", month: "short" });
 };
 
-function Visit({ a, user, reload, open }) {
-  const staff = user.role !== "patient";
+function Visit({ a, user, reload, open, when, showPatient = true }) {
+  const staff = user.role !== "patient" && showPatient;
   const set = (status) => api(`/appointments/${a.id}`, { method: "PATCH", body: { status } }).then(reload);
   return (
     <article className={"visit" + (live(a) ? "" : " done")} style={{ "--dept": DEPT[a.department] || "var(--line)" }}>
+      {when && <small className="when">{fmt(a.when)}</small>}
       <header>
         <b>{staff ? <button className="link" onClick={() => open(a.patient_id)}>{a.patient}</button> : a.doctor}</b>
         <span className={`tag ${a.status}`}>{a.status}</span>
@@ -111,6 +119,8 @@ function Visit({ a, user, reload, open }) {
 
 export function Dashboard({ user, open, go }) {
   const [d, reload, err] = useLoad("/dashboard");
+  const [allUp, setAllUp] = useState(false);
+  const [allRx, setAllRx] = useState(false);
   if (err) return <p className="error">{err}</p>;
   if (!d) return <Status>Loading…</Status>;
   const staff = user.role !== "patient";
@@ -119,7 +129,7 @@ export function Dashboard({ user, open, go }) {
   const nowAt = today.findIndex((a) => new Date(a.when) > now);
   const next = today.find((a) => new Date(a.when) > now && live(a)) || d.upcoming[0];
   const days = [];
-  d.upcoming.forEach((a) => { const k = dayLabel(a.when); const g = days.find((x) => x[0] === k); g ? g[1].push(a) : days.push([k, [a]]); });
+  (allUp ? d.upcoming : d.upcoming.slice(0, 4)).forEach((a) => { const k = dayLabel(a.when); const g = days.find((x) => x[0] === k); g ? g[1].push(a) : days.push([k, [a]]); });
   const items = today.map((a) => ({ a }));
   if (items.length) items.splice(nowAt < 0 ? items.length : nowAt, 0, { now: true });
   return (
@@ -148,8 +158,10 @@ export function Dashboard({ user, open, go }) {
         <section key={label} className="day"><h3>{label}</h3>
           {list.map((a) => <div className="slot" key={a.id}><time>{clock(a.when)}</time><Visit a={a} user={user} reload={reload} open={open} /></div>)}
         </section>))}
+      {d.upcoming.length > 4 && <button className="more" onClick={() => setAllUp(!allUp)}>{allUp ? "Show fewer" : `Show all ${d.upcoming.length} upcoming`}</button>}
 
-      <h2>Recent prescriptions</h2><RxTable rx={d.prescriptions} />
+      <h2>Recent prescriptions</h2><RxTable rx={allRx ? d.prescriptions : d.prescriptions.slice(0, 3)} />
+      {d.prescriptions.length > 3 && <button className="more" onClick={() => setAllRx(!allRx)}>{allRx ? "Show fewer" : `Show all ${d.prescriptions.length}`}</button>}
     </>
   );
 }
@@ -176,7 +188,7 @@ export function Appointments({ user, open }) {
       </div>
       {err && <p className="error">{err}</p>}
       {appts ? <ApptTable appts={appts} user={user} reload={reload} showPatient={user.role !== "patient"} open={open} /> : <Status>Loading…</Status>}
-      <h2>Book an appointment</h2>
+      <Fold title="Book an appointment">
       {msg && <p className="flash">{msg}</p>}
       <form className="grid" onSubmit={book}>
         {user.role !== "patient" && <label>Patient <select name="patient_id" required>{(patients || []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>}
@@ -184,7 +196,7 @@ export function Appointments({ user, open }) {
         <label>Date and time <input type="datetime-local" name="when" required /></label>
         <label>Reason <input name="reason" maxLength={200} /></label>
         <button>Book appointment</button>
-      </form>
+      </form></Fold>
     </>
   );
 }
@@ -208,7 +220,7 @@ export function Prescriptions({ user }) {
       {rx ? <RxTable rx={rx} /> : <Status>Loading…</Status>}
       {["doctor", "admin"].includes(user.role) && (
         <>
-          <h2>Write a prescription</h2>
+          <Fold title="Write a prescription">
           {msg && <p className="flash">{msg}</p>}
           <form className="grid" onSubmit={save}>
             <label>Patient <select name="patient_id" required>{(patients || []).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select></label>
@@ -216,7 +228,7 @@ export function Prescriptions({ user }) {
             <label>Dosage <input name="dosage" placeholder="e.g. 1 tablet twice daily" /></label>
             <label>Refills <input type="number" name="refills" min="0" defaultValue="0" /></label>
             <button>Save prescription</button>
-          </form>
+          </form></Fold>
         </>)}
     </>
   );
