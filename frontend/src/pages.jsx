@@ -1,4 +1,5 @@
 import { useEffect, useState, useCallback } from "react";
+import { Users, CalendarDays, Receipt, UserCog, Pill, FlaskConical, ClipboardList, Video } from "lucide-react";
 import QRCode from "qrcode";
 import { api } from "./api";
 
@@ -91,6 +92,7 @@ const QUICK = {
   receptionist: [["patients", "Register a patient"], ["appointments", "Book appointment"], ["tele", "Schedule video visit"]],
   patient: [["appointments", "Book appointment"], ["billing", "My bills"], ["tele", "Video visits"]],
 };
+const QICONS = { patients: Users, appointments: CalendarDays, billing: Receipt, users: UserCog, prescriptions: Pill, orders: FlaskConical, records: ClipboardList, tele: Video };
 const dayLabel = (iso) => {
   const d = new Date(iso), t = new Date(); t.setHours(0, 0, 0, 0);
   const diff = Math.round((new Date(d).setHours(0, 0, 0, 0) - t) / 864e5);
@@ -142,7 +144,13 @@ export function Dashboard({ user, open, go }) {
           {next && ` Next: ${dayLabel(next.when) === "Today" ? "" : dayLabel(next.when) + " "}${clock(next.when)}, ${staff ? next.patient : next.doctor}.`}</p>
       </section>
       {d.stats && <div className="stats">{Object.entries(d.stats).map(([k, v]) => <div key={k}><b>{v}</b>{k}</div>)}</div>}
-      {QUICK[user.role] && <div className="quick">{QUICK[user.role].map(([to, label]) => <button key={to + label} onClick={() => go(to)}>{label}</button>)}</div>}
+      {QUICK[user.role] && (
+        <div className="quick">
+          {QUICK[user.role].map(([to, label]) => { const Icon = QICONS[to]; return (
+            <button key={to + label} onClick={() => go(to)}>{Icon && <Icon size={20} />}<span>{label}</span></button>
+          ); })}
+        </div>
+      )}
 
       <h2>Today</h2>
       {items.length ? (
