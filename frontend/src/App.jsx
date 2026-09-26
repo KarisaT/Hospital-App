@@ -30,7 +30,18 @@ const Crest = ({ size = 32 }) => (
 
 const initials = (n) => n.replace(/^(Dr\.|Nurse|Pharm\.)\s*/, "").split(" ").map((w) => w[0]).slice(0, 2).join("").toUpperCase();
 
-const DEMO = { email: "itskarisa@outlook.com", password: "ChangeMe123!" };
+const DEMO_PASSWORD = "ChangeMe123!";
+const DEMO_ACCOUNTS = [
+  { role: "admin", email: "itskarisa@outlook.com" },
+  { role: "doctor", email: "daniel.taylor@hospitalguard.com" },
+  { role: "nurse", email: "nurse@hospitalguard.com" },
+  { role: "receptionist", email: "reception@hospitalguard.com" },
+  { role: "pharmacist", email: "pharmacist@hospitalguard.com" },
+  { role: "billing", email: "billing@hospitalguard.com" },
+  { role: "lab_tech", email: "lab@hospitalguard.com" },
+  { role: "radiologist", email: "radiology@hospitalguard.com" },
+  { role: "patient", email: "sarah.wanjiku@email.com" },
+];
 
 function Login({ onLogin }) {
   const [err, setErr] = useState("");
@@ -59,9 +70,18 @@ function Login({ onLogin }) {
             <button>Sign in</button>
             <div className="demo">
               <b>Want to look around?</b>
-              <span>Email: <code>{DEMO.email}</code></span>
-              <span>Password: <code>{DEMO.password}</code></span>
-              <button type="button" onClick={() => { setEmail(DEMO.email); setPassword(DEMO.password); }}>Use these details</button>
+              <span>Same password for every role: <code>{DEMO_PASSWORD}</code></span>
+              <div className="demo-list">
+                {DEMO_ACCOUNTS.map((d) => (
+                  <div className="demo-row" key={d.role}>
+                    <div className="who">
+                      <b>{d.role.replace("_", " ")}</b>
+                      <small>{d.email}</small>
+                    </div>
+                    <button type="button" onClick={() => { setEmail(d.email); setPassword(DEMO_PASSWORD); }}>Use</button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
           <div className="barcode" aria-hidden="true" />
