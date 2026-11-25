@@ -741,8 +741,9 @@ def seed_extra(db):
             db.add(b)
             frac = random.choice([0, 0.5, 1])
             if frac:
-                db.add(Payment(bill=b, amount=int(b.amount * frac), method=random.choice(["cash", "mpesa", "card", "insurance"])))
+                db.add(Payment(bill=b, amount=int("b.amount * frac"), method=random.choice(["cash", "mpesa", "card", "insurance"])))
     for i in range(6):
         db.add(TeleSession(patient=pats[i], doctor=random.choice(docs), scheduled_time=now + timedelta(days=random.randint(-5, 10), hours=random.randint(0, 8)),
                            meeting_url=f"https://meet.jit.si/HospitalGuard-{secrets.token_urlsafe(9)}"))
     db.commit()
+  

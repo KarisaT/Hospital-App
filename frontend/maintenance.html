@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0c2a2e">
+<meta name="robots" content="noindex">
+<title>HospitalGuard – Under maintenance</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Hanken+Grotesk:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0c2a2e;
+    --bg-deep: #081e21;
+    --ink: #eaf3f1;
+    --muted: #9db8b6;
+    --line: #1f4a4f;
+    --accent: #5fd1c0;
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: radial-gradient(120% 90% at 50% 0%, var(--bg) 0%, var(--bg-deep) 100%);
+    color: var(--ink);
+    font-family: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+    display: grid;
+    place-items: center;
+    padding: max(24px, env(safe-area-inset-top)) 24px max(24px, env(safe-area-inset-bottom));
+  }
+  main { max-width: 520px; width: 100%; }
+  .pulse {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 28px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--line);
+    color: var(--muted);
+    font-size: 15px;
+  }
+  .ecg { width: 72px; height: 28px; flex: none; }
+  .ecg path {
+    fill: none; stroke: var(--accent); stroke-width: 2;
+    stroke-linecap: round; stroke-linejoin: round;
+    stroke-dasharray: 200; stroke-dashoffset: 200;
+    animation: draw 2.4s ease-out infinite;
+  }
+  @keyframes draw {
+    0% { stroke-dashoffset: 200; opacity: 1; }
+    70% { stroke-dashoffset: 0; opacity: 1; }
+    100% { stroke-dashoffset: 0; opacity: 0; }
+  }
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 500;
+    font-size: clamp(34px, 8vw, 52px);
+    line-height: 1.08;
+    letter-spacing: -0.01em;
+    margin: 0 0 18px;
+  }
+  p { font-size: 17px; line-height: 1.6; color: var(--muted); margin: 0 0 14px; max-width: 46ch; }
+  .note {
+    margin-top: 30px; padding: 16px 18px;
+    border: 1px solid var(--line); border-radius: 10px;
+    font-size: 15px; color: var(--ink);
+  }
+  .note strong { font-weight: 600; }
+  a { color: var(--accent); }
+  a:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 2px; }
+  @media (prefers-reduced-motion: reduce) {
+    .ecg path { animation: none; stroke-dashoffset: 0; }
+  }
+</style>
+</head>
+<body>
+<main>
+  <div class="pulse">
+    <svg class="ecg" viewBox="0 0 72 28" aria-hidden="true">
+      <path d="M0 14h18l5-10 8 20 6-14 4 4h31"/>
+    </svg>
+    <span>HospitalGuard</span>
+  </div>
+
+  <h1>We’re making improvements</h1>
+  <p>The system is down for scheduled maintenance. Your data is safe and nothing has been lost.</p>
+  <p>Please check back shortly.</p>
+
+  <div class="note">
+    <strong>Urgent?</strong> Contact your hospital’s front desk or IT administrator directly.
+  </div>
+</main>
+</body>
+</html>
